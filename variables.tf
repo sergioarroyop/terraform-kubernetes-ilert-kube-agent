@@ -1,35 +1,21 @@
 variable "api_key" {
-  description = "The iLert alert source api key. Optional if secret_name is set, in that case the key is read from the secret."
+  description = "The iLert alert source api key. Optional if credentials_k8s_secret is set, in that case the key is read from the secret."
   type        = string
   default     = ""
   sensitive   = true
 }
 
 variable "http_authorization_key" {
-  description = "The HTTP authorization key for in-cluster routes. Optional if secret_name is set, in that case the key is read from the secret."
+  description = "The HTTP authorization key for in-cluster routes. Optional if credentials_k8s_secret is set, in that case the key is read from the secret."
   type        = string
   default     = ""
   sensitive   = true
 }
 
 variable "credentials_k8s_secret" {
-  description = "If set, the iLert credentials are injected as environment variables (ILERT_API_KEY / HTTP_AUTHORIZATION_KEY) from an existing Kubernetes Secret, instead of command line args. `ilert_token_key` is the key within the secret that holds the API key, and `http_authorization_key` is the key within the secret that holds the HTTP authorization key (set to \"\" to omit it)."
-  type = object({
-    secret_name            = string
-    ilert_token_key        = string
-    http_authorization_key = optional(string, "")
-  })
-  default = null
-
-  validation {
-    condition     = var.credentials_k8s_secret == null || var.credentials_k8s_secret.secret_name != ""
-    error_message = "credentials_k8s_secret.secret_name must not be empty."
-  }
-
-  validation {
-    condition     = var.credentials_k8s_secret == null || var.credentials_k8s_secret.ilert_token_key != ""
-    error_message = "credentials_k8s_secret.ilert_token_key must not be empty."
-  }
+  description = "Name of an existing Kubernetes Secret whose keys are mapped 1:1 to environment variables (envFrom). Keys such as ILERT_API_KEY or HTTP_AUTHORIZATION_KEY are read by ilert-kube-agent. If set, the credentials are not passed as command line args."
+  type        = string
+  default     = ""
 }
 
 variable "name" {

@@ -83,8 +83,8 @@ resource "kubernetes_deployment" "this" {
           command           = ["/bin/ilert-kube-agent"]
 
           args = compact([
-            var.credentials_k8s_secret == null ? "--settings.apiKey=${var.api_key}" : null,
-            var.credentials_k8s_secret == null && var.http_authorization_key != "" ? "--settings.httpAuthorizationKey=${var.http_authorization_key}" : null,
+            var.credentials_k8s_secret == "" ? "--settings.apiKey=${var.api_key}" : null,
+            var.credentials_k8s_secret == "" && var.http_authorization_key != "" ? "--settings.httpAuthorizationKey=${var.http_authorization_key}" : null,
             "--settings.port=${var.port}",
             "--config=/etc/${var.name}/config.yaml",
           ])
@@ -99,30 +99,11 @@ resource "kubernetes_deployment" "this" {
             }
           }
 
-          dynamic "env" {
-            for_each = var.credentials_k8s_secret != null ? [1] : []
+          dynamic "env_from" {
+            for_each = var.credentials_k8s_secret != "" ? [1] : []
             content {
-              name = "ILERT_API_KEY"
-
-              value_from {
-                secret_key_ref {
-                  name = var.credentials_k8s_secret.secret_name
-                  key  = var.credentials_k8s_secret.ilert_token_key
-                }
-              }
-            }
-          }
-
-          dynamic "env" {
-            for_each = var.credentials_k8s_secret != null && var.credentials_k8s_secret.http_authorization_key != "" ? [1] : []
-            content {
-              name = "HTTP_AUTHORIZATION_KEY"
-
-              value_from {
-                secret_key_ref {
-                  name = var.credentials_k8s_secret.secret_name
-                  key  = var.credentials_k8s_secret.http_authorization_key
-                }
+              secret_ref {
+                name = var.credentials_k8s_secret
               }
             }
           }
@@ -197,12 +178,12 @@ resource "kubernetes_deployment" "this" {
 
   lifecycle {
     precondition {
-      condition     = var.credentials_k8s_secret != null || var.api_key != ""
+      condition     = var.credentials_k8s_secret != "" || var.api_key != ""
       error_message = "Either var.api_key or var.credentials_k8s_secret must be set."
     }
 
     precondition {
-      condition     = var.credentials_k8s_secret == null || var.api_key == ""
+      condition     = var.credentials_k8s_secret == "" || var.api_key == ""
       error_message = "Set either var.credentials_k8s_secret (credentials read from the secret) or var.api_key, not both."
     }
   }
