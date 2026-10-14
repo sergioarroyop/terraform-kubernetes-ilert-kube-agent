@@ -15,9 +15,11 @@ resource "kubernetes_manifest" "incidents" {
         storage = true
         schema = {
           openAPIV3Schema = {
+            type     = "object"
             required = ["spec"]
             properties = {
               spec = {
+                type     = "object"
                 required = ["id"]
                 properties = {
                   id = {
