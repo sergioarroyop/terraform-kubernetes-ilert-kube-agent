@@ -19,4 +19,11 @@ resource "kubernetes_service" "this" {
     type = "ClusterIP"
   }
 
+  lifecycle {
+    ignore_changes = [
+      metadata[0].annotations["cloud.google.com/neg"],
+      metadata[0].annotations["cloud.google.com/neg-status"],
+    ]
+  }
+
 }
